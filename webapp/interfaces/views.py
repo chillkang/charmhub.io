@@ -5,7 +5,7 @@ from flask import (
     render_template,
     make_response,
     current_app as app,
-    abort
+    abort,
 )
 from flask.json import jsonify
 from github import Github
