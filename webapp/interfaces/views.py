@@ -5,6 +5,7 @@ from flask import (
     render_template,
     make_response,
     current_app as app,
+    abort
 )
 from flask.json import jsonify
 from github import Github
@@ -70,12 +71,12 @@ def all_interfaces(path):
 
 @interfaces.route("/interfaces/<path:path>")
 def single_interface(path):
-    if not getenv("ENVIRONMENT") in ["devel", "staging"]:
-        return render_template("404.html")
-
     response = get_single_interface(path, "")
     interface = eval(response.data.decode("utf-8"))
     context = {"interface": interface}
+
+    if not response or response.status_code != 200:
+        abort(404)
 
     return render_template("interfaces/index.html", **context)
 
