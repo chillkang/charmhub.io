@@ -5,6 +5,7 @@ from flask import (
     render_template,
     make_response,
     current_app as app,
+    redirect,
     abort,
 )
 from flask.json import jsonify
@@ -71,13 +72,18 @@ def all_interfaces(path):
 
 @interfaces.route("/interfaces/<path:path>")
 def single_interface(path):
-    response = get_single_interface(path, "")
-    interface = eval(response.data.decode("utf-8"))
+    interface = None
+    try:
+        response = get_single_interface(path, "")
+        interface = eval(response.data.decode("utf-8"))
+    except Exception:
+        response = get_single_interface(path, "draft")
+        if response:
+            return redirect(f"/interfaces/{path}/draft")
+        else:
+            abort(404)
+
     context = {"interface": interface}
-
-    if not response or response.status_code != 200:
-        abort(404)
-
     return render_template("interfaces/index.html", **context)
 
 
@@ -102,6 +108,7 @@ def get_single_interface(interface_name, status):
     interface_status = interface_logic.get_interface_status(
         interface_name, status
     )
+
     # if the user sends request for a status that does not exist
     if not interface_status:
         if status == "live":
